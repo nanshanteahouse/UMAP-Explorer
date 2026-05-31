@@ -124,7 +124,7 @@ S = {"fontSize": "13px", "fontWeight": 600, "marginRight": "8px"}
 
 def layout(**kwargs) -> html.Div:
     registry = loader.load_registry()
-    dopts = [{"label": ds.get("title", ds["id"]), "value": ds["id"]} for ds in registry]
+    dopts = [{"label": f"{ds['dataset_id']} ({ds.get('species', '?')}, {ds['n_cells']:,} cells)", "value": ds["dataset_id"]} for ds in registry]
     return html.Div([
         html.Div([
             html.Span("Synchronize:", style={"fontSize": "13px", "fontWeight": 600}),
