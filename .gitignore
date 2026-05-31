@@ -25,5 +25,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Sisyphus agent workspace
+.sisyphus/
+
 # Data cache (regenerated on demand)
 data/integrated/
