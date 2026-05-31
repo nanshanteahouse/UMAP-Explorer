@@ -206,18 +206,30 @@ def _build_marker(
         "line": {"width": _MARKER_LINE_WIDTH},
     }
 
+    # -- Gene expression colouring (BEFORE column-existence check) ----------
+    # Gene names don't appear in the metadata DataFrame columns — the
+    # expression values come from *gene_series* instead.  We must handle
+    # this colouring mode **before** the "No colouring" guard so that a
+    # valid gene name (e.g. "PAX6") isn't silently rejected just because
+    # it's absent from the metadata parquet.
+    if color_type == "gene" and gene_series is not None:
+        values = gene_series.loc[df_plot.index].values
+        base["color"] = values
+        base["colorscale"] = "Viridis"
+        base["colorbar"] = {
+            "title": color_col.replace("_", " ").title() if color_col else "Expression"
+        }
+        base["showscale"] = True
+        return base
+
     # -- No colouring -------------------------------------------------------
     if color_col is None or color_col not in df_plot.columns:
         base["color"] = "#636efa"
         return base
 
-    # -- Gene expression / numeric colouring --------------------------------
-    if color_type in ("numeric", "gene"):
-        if color_type == "gene" and gene_series is not None:
-            values = gene_series.loc[df_plot.index].values
-        else:
-            values = df_plot[color_col].values
-
+    # -- Numeric colouring --------------------------------------------------
+    if color_type == "numeric":
+        values = df_plot[color_col].values
         base["color"] = values
         base["colorscale"] = "Viridis"
         base["colorbar"] = {"title": color_col.replace("_", " ").title()}
