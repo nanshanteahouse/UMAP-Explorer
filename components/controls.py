@@ -41,8 +41,7 @@ def create_controls_panel(registry: list[dict]) -> html.Div:
                 searchable=True,
                 placeholder="Select dataset…",
             ),
-            # Caches the currently active dataset ID for cross-callback usage.
-            dcc.Store(id="dataset-store", data=default_dataset),
+            dcc.Store(id="dataset-store"),
         ],
     )
 
@@ -55,7 +54,7 @@ def create_controls_panel(registry: list[dict]) -> html.Div:
                 id="color-selector",
                 options=[],
                 value=None,
-                clearable=False,
+                clearable=True,
                 searchable=True,
                 placeholder="Select column…",
             ),
@@ -65,7 +64,7 @@ def create_controls_panel(registry: list[dict]) -> html.Div:
                 id="gene-selector",
                 options=[],
                 value=None,
-                clearable=True,
+                clearable=False,
                 searchable=True,
                 placeholder="Search gene…",
             ),
