@@ -63,7 +63,7 @@ def _shared_gene_opts(lid: str, rid: str) -> list[dict]:
     return [{"label": g, "value": g} for g in sorted(lset & rset)]
 
 
-def _fig(dsid: str | None, cc: str | None, gene: str | None, side: str = "left") -> go.Figure | type[no_update]:
+def _fig(dsid: str | None, cc: str | None, gene: str | None, side: str = "left", dim: str | None = None) -> go.Figure | type[no_update]:
     if not dsid:
         return no_update
     df = _meta(dsid)
@@ -72,11 +72,11 @@ def _fig(dsid: str | None, cc: str | None, gene: str | None, side: str = "left")
             gs = loader.load_gene_expression(dsid, gene)
         except (KeyError, Exception):
             return no_update
-        fig = make_umap_figure(df, color_col=gene, color_type="gene", gene_series=gs)
+        fig = make_umap_figure(df, color_col=gene, color_type="gene", gene_series=gs, dim=dim)
     elif cc and cc in df.columns:
-        fig = make_umap_figure(df, color_col=cc, color_type=loader.get_column_type(dsid, cc))
+        fig = make_umap_figure(df, color_col=cc, color_type=loader.get_column_type(dsid, cc), dim=dim)
     else:
-        fig = make_umap_figure(df, color_col=None)
+        fig = make_umap_figure(df, color_col=None, dim=dim)
     fig.update_layout(uirevision=f"{side}-{dsid}")
     return fig
 
@@ -117,6 +117,22 @@ def _panel(side: str, opts: list[dict]) -> html.Div:
             dcc.Dropdown(id=f"{side}-color", placeholder="Color by...", style={"marginBottom": "4px"}),
             dcc.Dropdown(id=f"{side}-gene", placeholder="Gene expression...", searchable=True,
                          style={"marginBottom": "4px"}),
+            dcc.RadioItems(
+                id=f"{side}-dim-toggle",
+                options=[
+                    {"label": " 2D", "value": "2D"},
+                    {"label": " 3D", "value": "3D"},
+                ],
+                value="2D",
+                labelStyle={
+                    "display": "inline-block",
+                    "marginRight": "16px",
+                    "fontSize": "13px",
+                    "cursor": "pointer",
+                },
+                inputStyle={"marginRight": "4px"},
+                style={"marginBottom": "4px"},
+            ),
             dcc.Graph(id=f"{side}-umap", style={"height": "100%", "minHeight": "400px"},
                       config={"displayModeBar": True, "scrollZoom": True}),
         ], className="comparison-panel-body", style={"padding": "8px", "display": "flex", "flexDirection": "column"}),
@@ -188,23 +204,25 @@ def _on_shared_opts(lid: str | None, rid: str | None) -> tuple:
 @callback(
     Output("left-umap", "figure"),
     Input("left-dataset-store", "data"), Input("left-color", "value"), Input("left-gene", "value"),
+    Input("left-dim-toggle", "value"),
     Input("shared-color", "value"), Input("shared-gene", "value"), Input("sync-mode", "value"),
 )
-def _left_umap(dsid: str | None, lc: str | None, lg: str | None,
+def _left_umap(dsid: str | None, lc: str | None, lg: str | None, dim: str | None,
                sc: str | None, sg: str | None, sync: list[str] | None) -> go.Figure | type[no_update]:
     sync = sync or []
-    return _fig(dsid, sc if "color" in sync and sc else lc, sg if "gene" in sync and sg else lg, "left")
+    return _fig(dsid, sc if "color" in sync and sc else lc, sg if "gene" in sync and sg else lg, "left", dim=dim)
 
 
 @callback(
     Output("right-umap", "figure"),
     Input("right-dataset-store", "data"), Input("right-color", "value"), Input("right-gene", "value"),
+    Input("right-dim-toggle", "value"),
     Input("shared-color", "value"), Input("shared-gene", "value"), Input("sync-mode", "value"),
 )
-def _right_umap(dsid: str | None, lc: str | None, lg: str | None,
+def _right_umap(dsid: str | None, lc: str | None, lg: str | None, dim: str | None,
                 sc: str | None, sg: str | None, sync: list[str] | None) -> go.Figure | type[no_update]:
     sync = sync or []
-    return _fig(dsid, sc if "color" in sync and sc else lc, sg if "gene" in sync and sg else lg, "right")
+    return _fig(dsid, sc if "color" in sync and sc else lc, sg if "gene" in sync and sg else lg, "right", dim=dim)
 
 
 @callback(

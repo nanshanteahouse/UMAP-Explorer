@@ -136,6 +136,28 @@ def _build_page(umap_df: pd.DataFrame) -> html.Div:
             html.Div(
                 className="sidebar-section",
                 children=[
+                    html.Div("Display", className="sidebar-section-title"),
+                    html.Label("Plot mode", style={"fontSize": "13px", "marginBottom": "4px", "display": "block"}),
+                    dcc.RadioItems(
+                        id="integrated-dim-toggle",
+                        options=[
+                            {"label": " 2D", "value": "2D"},
+                            {"label": " 3D", "value": "3D"},
+                        ],
+                        value="2D",
+                        labelStyle={
+                            "display": "inline-block",
+                            "marginRight": "16px",
+                            "fontSize": "13px",
+                            "cursor": "pointer",
+                        },
+                        inputStyle={"marginRight": "4px"},
+                    ),
+                ],
+            ),
+            html.Div(
+                className="sidebar-section",
+                children=[
                     html.Div("Datasets", className="sidebar-section-title"),
                     dcc.Checklist(
                         id="integrated-dataset-filter",
@@ -247,9 +269,10 @@ def _filter_df(df, datasets, celltypes):
     Input("integrated-color-selector", "value"),
     Input("integrated-dataset-filter", "value"),
     Input("integrated-celltype-filter", "value"),
+    Input("integrated-dim-toggle", "value"),
     prevent_initial_call=False,
 )
-def _update_umap(color_col, datasets, celltypes):
+def _update_umap(color_col, datasets, celltypes, dim):
     df = _load_umap()
     if df is None or len(df) == 0:
         return no_update
@@ -257,7 +280,7 @@ def _update_umap(color_col, datasets, celltypes):
     if len(df) == 0:
         return go.Figure({"data": [], "layout": {"annotations": [{"text": "No cells match filters", "showarrow": False}]}})
     is_num = color_col and color_col in df.columns and pd.api.types.is_numeric_dtype(df[color_col].dtype) and not pd.api.types.is_bool_dtype(df[color_col].dtype) and df[color_col].nunique() > 20
-    return make_umap_figure(df, color_col=color_col, color_type="numeric" if is_num else "categorical", sample_size=50000)
+    return make_umap_figure(df, color_col=color_col, color_type="numeric" if is_num else "categorical", sample_size=50000, dim=dim)
 
 
 @callback(
