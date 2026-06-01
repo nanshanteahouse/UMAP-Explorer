@@ -134,6 +134,11 @@ body {
     min-height: 0;
 }
 
+#violin-graph {
+    height: 100%;
+    display: none;
+}
+
 /* Info Panel */
 .info-panel {
     background: var(--bg-card);

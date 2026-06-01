@@ -60,7 +60,9 @@ def _shared_gene_opts(lid: str, rid: str) -> list[dict]:
     gi = loader.load_gene_index().get("genes", {})
     lset = {g for g, v in gi.items() if lid in v.get("datasets", [])}
     rset = {g for g, v in gi.items() if rid in v.get("datasets", [])}
-    return [{"label": g, "value": g} for g in sorted(lset & rset)]
+    avail_l = set(loader.get_available_genes(lid))
+    avail_r = set(loader.get_available_genes(rid))
+    return [{"label": g, "value": g} for g in sorted(lset & rset & avail_l & avail_r)]
 
 
 def _fig(dsid: str | None, cc: str | None, gene: str | None, side: str = "left", dim: str | None = None) -> go.Figure | type[no_update]:
@@ -176,7 +178,8 @@ def layout(**kwargs) -> html.Div:
 def _on_left_dataset(dsid: str | None) -> tuple:
     if not dsid:
         return [], None, [], None, None
-    return _color_opts(dsid), None, get_gene_options(dsid, loader.load_gene_index()), None, dsid
+    avail = set(loader.get_available_genes(dsid))
+    return _color_opts(dsid), None, get_gene_options(dsid, loader.load_gene_index(), available_genes=avail), None, dsid
 
 
 @callback(
@@ -188,7 +191,8 @@ def _on_left_dataset(dsid: str | None) -> tuple:
 def _on_right_dataset(dsid: str | None) -> tuple:
     if not dsid:
         return [], None, [], None, None
-    return _color_opts(dsid), None, get_gene_options(dsid, loader.load_gene_index()), None, dsid
+    avail = set(loader.get_available_genes(dsid))
+    return _color_opts(dsid), None, get_gene_options(dsid, loader.load_gene_index(), available_genes=avail), None, dsid
 
 
 @callback(

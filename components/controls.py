@@ -68,6 +68,16 @@ def create_controls_panel(registry: list[dict]) -> html.Div:
                 searchable=True,
                 placeholder="Search gene…",
             ),
+            html.Div(style={"height": "8px"}),
+            html.Label("Group by (Violin)", style={"fontSize": "13px", "marginBottom": "4px", "display": "block"}),
+            dcc.Dropdown(
+                id="violin-groupby-selector",
+                options=[],
+                value=None,
+                clearable=False,
+                searchable=True,
+                placeholder="cell_type (auto)...",
+            ),
         ],
     )
 
@@ -91,7 +101,25 @@ def create_controls_panel(registry: list[dict]) -> html.Div:
                 },
                 inputStyle={"marginRight": "4px"},
             ),
-            html.Div(style={"height": "12px"}),
+            html.Div(style={"height": "8px"}),
+            html.Label("View", style={"fontSize": "13px", "marginBottom": "4px", "display": "block"}),
+            dcc.RadioItems(
+                id="plot-type-toggle",
+                options=[
+                    {"label": " UMAP", "value": "umap"},
+                    {"label": " Violin", "value": "violin"},
+                ],
+                value="umap",
+                labelStyle={
+                    "display": "inline-block",
+                    "marginRight": "16px",
+                    "fontSize": "13px",
+                    "cursor": "pointer",
+                },
+                inputStyle={"marginRight": "4px"},
+                inline=True,
+            ),
+            html.Div(style={"height": "8px"}),
             html.Label("Point size", style={"fontSize": "13px", "marginBottom": "4px", "display": "block"}),
             dcc.Slider(
                 id="size-slider",

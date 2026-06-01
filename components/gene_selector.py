@@ -19,7 +19,7 @@ Typical usage::
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -70,9 +70,10 @@ def _format_shared_label(gene: str, gene_info: dict[str, Any], n_datasets: int) 
 def get_gene_options(
     dataset_id: str,
     gene_index: dict[str, Any],
+    available_genes: Optional[set[str]] = None,
     data_loader: object = None,
 ) -> list[dict[str, str]]:
-    """Return ``dcc.Dropdown`` options for every gene in *dataset_id*.
+    """Return ``dcc.Dropdown`` options for genes in *dataset_id*.
 
     Options are grouped in this order:
       1. Marker genes present in the dataset (sorted alphabetically).
@@ -90,9 +91,12 @@ def get_gene_options(
     gene_index : dict
         The ``gene_index.json`` contents — a dict with a ``"genes"`` key
         mapping gene symbols to their metadata.
+    available_genes : set[str] or None
+        When provided, only genes present in this set are included in
+        the returned options.  Use this to restrict the dropdown to
+        genes that actually have expression data in the cached parquet.
     data_loader : object, optional
-        Reserved for future use (e.g. checking expression data availability).
-        Not currently used.
+        Reserved for future use.  Not currently used.
 
     Returns
     -------
@@ -108,6 +112,10 @@ def get_gene_options(
     for gene_name, info in genes.items():
         # Skip genes not present in the requested dataset.
         if dataset_id not in info.get("datasets", []):
+            continue
+
+        # Filter to only genes with expression data in the parquet cache.
+        if available_genes is not None and gene_name not in available_genes:
             continue
 
         is_marker: bool = info.get("is_marker", False)
