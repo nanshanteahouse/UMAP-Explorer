@@ -12,6 +12,7 @@ from dash import (
     html,
     no_update,
 )
+from typing import Any
 
 from components.controls import create_controls_panel
 from components.data_loader import DataLoader
@@ -89,23 +90,16 @@ def on_dataset_select(dataset_id: str) -> tuple:
     n_cells = len(df)
 
     columns = loader.get_available_columns(dataset_id)
-    cat_options: list[dict] = []
-    num_options: list[dict] = []
+    color_options: list[dict] = []
 
     for col in columns:
         col_type = loader.get_column_type(dataset_id, col)
-        label = col.replace("_", " ").title()
-        entry: dict[str, str] = {"label": label, "value": col}
+        base_label = col.replace("_", " ").title()
         if col_type in ("categorical", "bool"):
-            cat_options.append(entry)
+            label = f"[C] {base_label}"
         else:
-            num_options.append(entry)
-
-    color_options: list[dict] = []
-    if cat_options:
-        color_options.append({"label": "Categorical", "options": cat_options})
-    if num_options:
-        color_options.append({"label": "Numeric", "options": num_options})
+            label = f"[N] {base_label}"
+        color_options.append({"label": label, "value": col})
 
     gene_index = loader.load_gene_index()
     gene_options = get_gene_options(dataset_id, gene_index)
@@ -113,12 +107,13 @@ def on_dataset_select(dataset_id: str) -> tuple:
     sample_size = min(n_cells, 50000)
     sample_info = f"{n_cells:,} cells available, rendering {sample_size:,}"
 
-    return color_options, None, gene_options, None, dataset_id, sample_info
+    # Use no_update to preserve color-selector value (not None);
+    # resetting on reconciliation breaks the dropdown selection.
+    return color_options, no_update, gene_options, None, dataset_id, sample_info
 
 
 @callback(
     Output("umap-graph", "figure"),
-    Output("color-selector", "value", allow_duplicate=True),
     Input("dataset-store", "data"),
     Input("color-selector", "value"),
     Input("gene-selector", "value"),
@@ -134,9 +129,9 @@ def _update_umap_figure(
     dim: str,
     size: float,
     opacity: float,
-) -> tuple:
+) -> Any:
     if not dataset_id:
-        return no_update, no_update
+        return no_update
 
     df = _get_metadata(dataset_id)
 
@@ -144,7 +139,7 @@ def _update_umap_figure(
         try:
             gene_series = loader.load_gene_expression(dataset_id, gene)
         except (KeyError, Exception):
-            return no_update, no_update
+            return no_update
 
         fig = make_umap_figure(
             df,
@@ -154,12 +149,7 @@ def _update_umap_figure(
             gene_series=gene_series,
         )
         fig.update_traces(marker={"size": size, "opacity": opacity})
-
-        # Only clear color-selector when transitioning into gene mode;
-        # skip if already None to avoid cascading re-triggers.
-        if color_col is not None:
-            return fig, None
-        return fig, no_update
+        return fig
 
     if color_col and color_col in df.columns:
         col_type = loader.get_column_type(dataset_id, color_col)
@@ -173,7 +163,7 @@ def _update_umap_figure(
         fig = make_umap_figure(df, color_col=None, dim=dim.lower())
 
     fig.update_traces(marker={"size": size, "opacity": opacity})
-    return fig, no_update
+    return fig
 
 
 @callback(

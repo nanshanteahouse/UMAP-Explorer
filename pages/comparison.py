@@ -24,32 +24,24 @@ def _meta(dsid: str) -> pd.DataFrame:
 
 def _color_opts(dsid: str) -> list[dict]:
     cols = loader.get_available_columns(dsid)
-    cat, num = [], []
+    opts: list[dict] = []
     for c in cols:
         t = loader.get_column_type(dsid, c)
-        e = {"label": c.replace("_", " ").title(), "value": c}
-        (cat if t in ("categorical", "bool") else num).append(e)
-    r = []
-    if cat:
-        r.append({"label": "Categorical", "options": cat})
-    if num:
-        r.append({"label": "Numeric", "options": num})
-    return r
+        base_label = c.replace("_", " ").title()
+        prefix = "[C] " if t in ("categorical", "bool") else "[N] "
+        opts.append({"label": f"{prefix}{base_label}", "value": c})
+    return opts
 
 
 def _shared_color_opts(lid: str, rid: str) -> list[dict]:
     common = sorted(set(loader.get_available_columns(lid)) & set(loader.get_available_columns(rid)))
-    cat, num = [], []
+    opts: list[dict] = []
     for c in common:
         t = loader.get_column_type(lid, c)
-        e = {"label": c.replace("_", " ").title(), "value": c}
-        (cat if t in ("categorical", "bool") else num).append(e)
-    r = []
-    if cat:
-        r.append({"label": "Categorical", "options": cat})
-    if num:
-        r.append({"label": "Numeric", "options": num})
-    return r
+        base_label = c.replace("_", " ").title()
+        prefix = "[C] " if t in ("categorical", "bool") else "[N] "
+        opts.append({"label": f"{prefix}{base_label}", "value": c})
+    return opts
 
 
 def _shared_gene_opts(lid: str, rid: str) -> list[dict]:
