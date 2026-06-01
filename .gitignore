@@ -28,5 +28,11 @@ Thumbs.db
 # Sisyphus agent workspace
 .sisyphus/
 
+# OpenCode agent workspace
+.omo/
+
+# Agent instructions (auto-generated)
+AGENTS.md
+
 # Data cache (regenerated on demand)
 data/integrated/

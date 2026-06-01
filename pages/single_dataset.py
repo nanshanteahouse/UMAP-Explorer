@@ -125,6 +125,7 @@ def on_dataset_select(dataset_id: str) -> tuple:
     Input("dim-toggle", "value"),
     Input("size-slider", "value"),
     Input("opacity-slider", "value"),
+    prevent_initial_call=True,
 )
 def _update_umap_figure(
     dataset_id: str | None,
