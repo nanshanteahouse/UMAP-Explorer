@@ -90,16 +90,22 @@ def on_dataset_select(dataset_id: str) -> tuple:
     n_cells = len(df)
 
     columns = loader.get_available_columns(dataset_id)
-    color_options: list[dict] = []
+    cat_opts: list[dict] = []
+    num_opts: list[dict] = []
 
     for col in columns:
         col_type = loader.get_column_type(dataset_id, col)
         base_label = col.replace("_", " ").title()
+        entry = {"label": f"[C] {base_label}", "value": col}
         if col_type in ("categorical", "bool"):
-            label = f"[C] {base_label}"
+            cat_opts.append(entry)
         else:
-            label = f"[N] {base_label}"
-        color_options.append({"label": label, "value": col})
+            entry["label"] = f"[N] {base_label}"
+            num_opts.append(entry)
+
+    cat_opts.sort(key=lambda x: x["label"])
+    num_opts.sort(key=lambda x: x["label"])
+    color_options = cat_opts + num_opts
 
     gene_index = loader.load_gene_index()
     gene_options = get_gene_options(dataset_id, gene_index)

@@ -250,24 +250,23 @@ def _build_marker(
     # Pick colours, cycling the palette if needed.
     palette = _CATEGORICAL_PALETTE * (1 + n_cats // len(_CATEGORICAL_PALETTE))
 
-    # Build a discrete colour scale with step-like stops so that each
-    # integer id maps to a solid colour (no interpolation).
-    step = 1.0 / max(n_cats, 1)
+    # Build a discrete colour scale — each category gets a contiguous
+    # colour-block so the colour-bar renders solid blocks rather than
+    # a smooth gradient (misleading for categorical data).
+    cmax = float(n_cats)
     colorscale: list[list[float | str]] = []
     for i, cat_color in enumerate(palette[:n_cats]):
-        lo = i * step
-        hi = (i + 0.999) * step
+        lo = i / cmax
+        hi = (i + 1) / cmax
         colorscale.append([lo, cat_color])
         colorscale.append([hi, cat_color])
-
-    cmax = n_cats - 1 if n_cats > 1 else 1
 
     base["color"] = color_ids
     base["colorscale"] = colorscale
     base["cmin"] = 0
     base["cmax"] = cmax
     base["colorbar"] = {
-        "tickvals": list(range(n_cats)),
+        "tickvals": [i + 0.5 for i in range(n_cats)],
         "ticktext": categories,
         "title": color_col.replace("_", " ").title(),
     }
