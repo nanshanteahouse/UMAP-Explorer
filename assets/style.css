@@ -131,15 +131,17 @@ body {
 .content-area .umap-container {
     flex: 1;
     position: relative;
+    min-height: 0;
 }
 
 /* Info Panel */
 .info-panel {
     background: var(--bg-card);
     border-top: 1px solid var(--border);
-    padding: 16px 24px;
-    max-height: 200px;
+    padding: 12px 20px;
+    max-height: 320px;
     overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .info-panel-title {

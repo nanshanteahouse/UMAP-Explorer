@@ -131,9 +131,9 @@ def build_info_panel_content(
                 )
             ],
             layout=go.Layout(
-                title={"text": "Cell Type Distribution", "font": {"size": 12}},
-                height=180,
-                margin={"t": 30, "b": 10, "l": 10, "r": 10},
+                title={"text": "Cell Type Distribution", "font": {"size": 11}},
+                height=140,
+                margin={"t": 20, "b": 5, "l": 5, "r": 5},
                 template="plotly_white",
                 showlegend=True,
                 legend={
@@ -146,7 +146,7 @@ def build_info_panel_content(
         children.append(
             dcc.Graph(
                 figure=pie,
-                style={"height": "180px"},
+                style={"height": "140px"},
                 config={"displayModeBar": False},
             )
         )
@@ -172,15 +172,15 @@ def build_info_panel_content(
                 layout=go.Layout(
                     title={
                         "text": f"Distribution of {color_col}",
-                        "font": {"size": 12},
+                        "font": {"size": 11},
                     },
-                    height=180,
-                    margin={"t": 30, "b": 30, "l": 40, "r": 10},
+                    height=140,
+                    margin={"t": 20, "b": 20, "l": 35, "r": 5},
                     template="plotly_white",
                     xaxis={
-                        "title": {"text": color_col, "font": {"size": 10}}
+                        "title": {"text": color_col, "font": {"size": 9}}
                     },
-                    yaxis={"title": {"text": "Count", "font": {"size": 10}}},
+                    yaxis={"title": {"text": "Count", "font": {"size": 9}}},
                 ),
             )
         else:
@@ -197,20 +197,20 @@ def build_info_panel_content(
                 layout=go.Layout(
                     title={
                         "text": f"Distribution of {color_col}",
-                        "font": {"size": 12},
+                        "font": {"size": 11},
                     },
-                    height=180,
-                    margin={"t": 30, "b": 60, "l": 40, "r": 10},
+                    height=140,
+                    margin={"t": 20, "b": 40, "l": 35, "r": 5},
                     template="plotly_white",
                     xaxis={
                         "tickangle": -45,
                         "title": {
                             "text": color_col,
-                            "font": {"size": 10},
+                            "font": {"size": 9},
                         },
                     },
                     yaxis={
-                        "title": {"text": "Count", "font": {"size": 10}}
+                        "title": {"text": "Count", "font": {"size": 9}}
                     },
                 ),
             )
@@ -218,7 +218,7 @@ def build_info_panel_content(
         children.append(
             dcc.Graph(
                 figure=dist,
-                style={"height": "180px"},
+                style={"height": "140px"},
                 config={"displayModeBar": False},
             )
         )
