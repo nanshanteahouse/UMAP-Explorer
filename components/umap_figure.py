@@ -139,6 +139,32 @@ def make_umap_figure(
     # ------------------------------------------------------------------
     # 4. Marker colouring
     # ------------------------------------------------------------------
+    # Categorical data uses multi-trace + legend so users can click
+    # legend items to filter cell populations.  Gene / numeric / no-colour
+    # use the single-trace + colour-bar path below.
+    is_categorical = (
+        color_type == "categorical"
+        and color_col is not None
+        and color_col in df_plot.columns
+    )
+
+    if is_categorical:
+        traces = _build_categorical_traces(
+            df_plot=df_plot,
+            x=x,
+            y=y,
+            z=z,
+            is_3d=is_3d,
+            customdata=customdata,
+            hovertemplate=hover_template,
+            color_col=color_col,
+        )
+        fig = go.Figure(data=traces)
+        _apply_layout(fig, is_3d=is_3d,
+                      legend_title=color_col.replace("_", " ").title())
+        return fig
+
+    # -- Non-categorical (gene / numeric / no colour) -------------------
     marker: dict[str, Any] = _build_marker(
         df_plot=df_plot,
         color_col=color_col,
@@ -182,6 +208,69 @@ def make_umap_figure(
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+def _build_categorical_traces(
+    df_plot: pd.DataFrame,
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray | None,
+    is_3d: bool,
+    customdata: np.ndarray,
+    hovertemplate: str,
+    color_col: str,
+) -> "list[go.Scattergl | go.Scatter3d]":
+    """Build one trace per category for legend-based filtering.
+
+    Each trace receives a fixed colour from the categorical palette
+    and ``name=<category>``, which activates Plotly's built-in legend:
+    click to toggle visibility, double-click to isolate a single
+    population.
+    """
+    categories: list[str] = sorted(df_plot[color_col].astype(str).unique())
+    n_cats = len(categories)
+
+    palette = _CATEGORICAL_PALETTE * (1 + n_cats // len(_CATEGORICAL_PALETTE))
+
+    marker_base: dict[str, Any] = {
+        "size": _MARKER_SIZE,
+        "opacity": _MARKER_OPACITY,
+        "line": {"width": _MARKER_LINE_WIDTH},
+    }
+
+    traces: list[go.Scattergl | go.Scatter3d] = []
+    for i, cat in enumerate(categories):
+        mask: np.ndarray = (df_plot[color_col].astype(str).values == cat)
+        if not mask.any():
+            continue
+
+        marker = {**marker_base, "color": palette[i]}
+
+        if is_3d:
+            traces.append(go.Scatter3d(
+                x=x[mask],
+                y=y[mask],
+                z=z[mask],
+                mode="markers",
+                marker=marker,
+                customdata=customdata[mask],
+                hovertemplate=hovertemplate,
+                name=cat,
+                showlegend=True,
+            ))
+        else:
+            traces.append(go.Scattergl(
+                x=x[mask],
+                y=y[mask],
+                mode="markers",
+                marker=marker,
+                customdata=customdata[mask],
+                hovertemplate=hovertemplate,
+                name=cat,
+                showlegend=True,
+            ))
+
+    return traces
 
 
 def _build_marker(
@@ -274,7 +363,8 @@ def _build_marker(
     return base
 
 
-def _apply_layout(fig: go.Figure, is_3d: bool) -> None:
+def _apply_layout(fig: go.Figure, is_3d: bool,
+                  legend_title: str | None = None) -> None:
     """Apply the standard UMAP figure layout."""
     axis_style: dict[str, Any] = {
         "showgrid": False,
@@ -282,6 +372,22 @@ def _apply_layout(fig: go.Figure, is_3d: bool) -> None:
         "showticklabels": False,
         "title": {"text": ""},
     }
+
+    legend: dict[str, Any] = {}
+    if legend_title is not None:
+        legend = {
+            "title": {"text": legend_title, "font": {"size": 11}},
+            "font": {"size": 10},
+            "itemsizing": "constant",
+            "itemclick": "toggle",
+            "itemdoubleclick": "toggleothers",
+            "traceorder": "normal",
+            "x": 0.0,
+            "y": 1.02,
+            "xanchor": "left",
+            "yanchor": "top",
+            "bgcolor": "rgba(255,255,255,0.85)",
+        }
 
     if is_3d:
         fig.update_layout(
@@ -295,6 +401,7 @@ def _apply_layout(fig: go.Figure, is_3d: bool) -> None:
             uirevision="constant",
             margin={"l": 0, "r": 0, "t": 0, "b": 0},
             hovermode="closest",
+            legend=legend,
         )
     else:
         fig.update_layout(
@@ -306,4 +413,5 @@ def _apply_layout(fig: go.Figure, is_3d: bool) -> None:
             hovermode="closest",
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
+            legend=legend,
         )
